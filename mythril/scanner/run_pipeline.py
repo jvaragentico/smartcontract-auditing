@@ -33,7 +33,7 @@ def audit_one(auditor, chain, address, metadata, source_dir):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chains', nargs='+', choices=('eth', 'optimism', 'avalanche'), default=['eth', 'optimism', 'avalanche'])
-    parser.add_argument('--target', type=int, default=20, help='New projects per chain')
+    parser.add_argument('--target', type=int, default=20, help='Total saved projects per chain, including earlier runs')
     parser.add_argument('--min-usd', type=Decimal, default=Decimal('10000'))
     parser.add_argument('--max-pages', type=int, default=1000)
     parser.add_argument('--audit-timeout', type=int, default=90)
@@ -57,9 +57,14 @@ def main(argv=None):
         def on_saved(address, metadata, run):
             if audit_one(auditor, chain, address, metadata, run) == 'failed':
                 failures.append(address)
-        options = ['--funded', '--explorer', url, '--target', str(args.target), '--min-usd', str(args.min_usd),
+        already_saved = len(list(metadata_dir.glob('contract_0x*.json')))
+        remaining = max(0, args.target - already_saved)
+        if not remaining:
+            logging.info('%s already has %s projects; target met', chain, already_saved)
+            continue
+        options = ['--funded', '--explorer', url, '--target', str(remaining), '--min-usd', str(args.min_usd),
                    '--max-pages', str(args.max_pages), '--interval', str(args.interval), '--output', str(source_dir),
-                   '--metadata-dir', str(metadata_dir), '--failed-dir', str(ROOT / 'failed' / chain)]
+                   '--metadata-dir', str(metadata_dir), '--failed-dir', str(source_dir)]
         try:
             if core.main(options, client=client, on_saved=on_saved):
                 failures.append(chain + ': download shortfall')
