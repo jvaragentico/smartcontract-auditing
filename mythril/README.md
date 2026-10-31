@@ -2,6 +2,8 @@
 
 Windows + Python 3.10+ + Docker Desktop. The pipeline discovers verified contracts on Ethereum, Optimism, and Avalanche and runs the original Mythril Docker image (v0.24.8) immediately after each download. The process is sequential: discovery pauses during each audit. It keeps sources and writes text reports in `scanner/reports/<chain>`; failed and partial scans are identified rather than marked clean. Findings need manual validation, particularly proxy and delegatecall warnings. This tool does not prove deployed contracts are exploitable or secure.
 
+The analyzer explores up to one transaction (`-t 1`) for faster triage; vulnerabilities requiring multiple transactions can be missed.
+
 Start Docker Desktop and wait for its engine, then in PowerShell:
 
 ```powershell
