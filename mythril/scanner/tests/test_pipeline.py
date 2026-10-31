@@ -7,6 +7,13 @@ import run_pipeline
 
 
 class PipelineTests(unittest.TestCase):
+    def test_focus_excludes_dependency_only_matches(self):
+        source = {'name': 'App', 'source_code': 'contract App {}', 'file_path': 'App.sol',
+                  'additional_sources': [{'file_path': '@openzeppelin/contracts/Vault.sol', 'source_code': 'contract Vault {}'}]}
+        self.assertFalse(run_pipeline.application_focus(source))
+        source['additional_sources'].append({'file_path': 'contracts/Staking.sol', 'source_code': 'contract Staking {}'})
+        self.assertTrue(run_pipeline.application_focus(source))
+
     def test_audit_failure_keeps_source_and_creates_status(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
