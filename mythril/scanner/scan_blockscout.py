@@ -363,7 +363,7 @@ def resumed_candidates(client, max_pages, checkpoint_path, key):
     raise APIError(f'Page limit ({max_pages}) reached for /addresses; scan incomplete')
 
 
-def main(argv=None, client=None, on_saved=None):
+def main(argv=None, client=None, on_saved=None, source_filter=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--explorer', default='https://eth.blockscout.com')
     parser.add_argument('--target', type=int, default=100)
@@ -440,6 +440,9 @@ def main(argv=None, client=None, on_saved=None):
                         continue
                     LOG.info('%s: value qualifies; fetching verified source', address)
                     source = client.get('/smart-contracts/' + address)
+                    if source_filter is not None and not source_filter(source):
+                        LOG.info('%s: skipped by application focus filter', address)
+                        continue
                     if not args.funded and not recent(tx['timestamp'], time.time()):
                         continue
                     metadata = dict(address=address, explorer=client.base,
