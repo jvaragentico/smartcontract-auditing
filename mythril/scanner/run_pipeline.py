@@ -2,6 +2,7 @@
 import argparse
 import json
 import logging
+import re
 from pathlib import Path
 from decimal import Decimal
 
@@ -12,6 +13,24 @@ from chain_sources import AutoClient, SourcifyClient
 from scan_chains import CHAINS
 
 ROOT = Path(__file__).resolve().parent
+
+
+def application_focus(source):
+    """Select application features; matches are not evidence of vulnerability."""
+    keyword = re.compile(r'vault|deposit|withdraw|redeem|escrow|treasury|lend|borrow|stak(?:e|ing)|reward|liquidat|swap|exchange|bridge|pool|auction|router', re.I)
+    if keyword.search(source.get('name') or ''):
+        return True
+    sources = [{'file_path': source.get('file_path', ''), 'source_code': source.get('source_code', '')}]
+    sources.extend(source.get('additional_sources') or [])
+    for item in sources:
+        name = item.get('file_path') or ''
+        if re.search(r'(^|/)(node_modules|vendor|lib|@openzeppelin|openzeppelin-contracts|interfaces?)(/|$)', name, re.I):
+            continue
+        code = item.get('source_code') or ''
+        clean = re.sub(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', ' ', code, flags=re.S)
+        if keyword.search(name + ' ' + clean):
+            return True
+    return False
 
 
 def audit_one(auditor, chain, address, metadata, source_dir):
@@ -66,7 +85,7 @@ def main(argv=None):
                    '--max-pages', str(args.max_pages), '--interval', str(args.interval), '--output', str(source_dir),
                    '--metadata-dir', str(metadata_dir), '--failed-dir', str(source_dir)]
         try:
-            if core.main(options, client=client, on_saved=on_saved):
+            if core.main(options, client=client, on_saved=on_saved, source_filter=application_focus):
                 failures.append(chain + ': download shortfall')
         except (core.APIError, OSError, ValueError) as exc:
             failures.append(chain + ': ' + str(exc))
