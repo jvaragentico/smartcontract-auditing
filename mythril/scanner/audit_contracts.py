@@ -318,7 +318,7 @@ class Auditor:
                            # Mythril silently returns partial results when its own short timeout
                            # fires. Keep its limits above our external limit so the subprocess
                            # timeout is recorded as a failed scan instead of a clean scan.
-                           '-o', 'json', '--execution-timeout', '86400', '--create-timeout', '86400',
+                           '-o', 'json', '-t', '1', '--execution-timeout', '86400', '--create-timeout', '86400',
                            '--no-onchain-data']
                 LOG.info('Auditing %s %s with Mythril', chain, address)
                 try:
@@ -357,7 +357,7 @@ class Auditor:
                         '-v', '3', 'analyze', '-f', '/workspace/' + bytecode_name,
                         *(['--bin-runtime', '--unconstrained-storage'] if analysis_mode == 'deployed_runtime' else []),
                         '-o', 'json',
-                        '--execution-timeout', '86400', '--create-timeout', '86400', '--no-onchain-data']
+                        '-t', '1', '--execution-timeout', '86400', '--create-timeout', '86400', '--no-onchain-data']
                     try:
                         runtime_result = subprocess.run(runtime_command, capture_output=True, text=True,
                             encoding='utf-8', errors='replace', timeout=self.timeout + 100)
