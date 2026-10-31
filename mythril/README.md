@@ -4,6 +4,8 @@ Windows + Python 3.10+ + Docker Desktop. The pipeline discovers verified contrac
 
 The analyzer explores up to one transaction (`-t 1`) for faster triage; vulnerabilities requiring multiple transactions can be missed.
 
+Discovery filters for names or custom source mentioning vaults, lending, deposits, staking, exchanges, bridges and related features. It retains OpenZeppelin dependencies. This heuristic can both miss relevant contracts and include safe ones.
+
 Start Docker Desktop and wait for its engine, then in PowerShell:
 
 ```powershell
